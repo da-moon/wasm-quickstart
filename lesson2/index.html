@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      background-color: rgb(255, 255, 255);
+    }
+  </style>
+  <script>
+  function FetchAndInstantiateWasmFromAddress (url, imports) {
+    return fetch(url)
+    .then(result => {
+      if (result.ok)
+        return result.arrayBuffer();
+      throw new Error(`Unable to fetch Web Assembly file ${url}.`);
+    })
+    .then(wasmByteArray => WebAssembly.compile(wasmByteArray))
+    .then(wasmModule => WebAssembly.instantiate(wasmModule, imports || {}))
+    .then(wasmInstance => wasmInstance.exports);
+  }
+  FetchAndInstantiateWasmFromAddress('./main.wasm')
+    .then(wasmInstance => {
+      factorialWASM = wasmInstance.factorialWASM;
+      document.getElementById("container").innerText= factorialWASM(6);
+    });
+</script>
+</head>
+<body>
+  <h1>Lesson 2</h1>
+  <p>Compiling a factorial function written recursively in C and show casing result of factorial of 6 :</p><br>
+  <span id="container"></span>
+
+</body>
+</html>

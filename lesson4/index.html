@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      background-color: rgb(255, 255, 255);
+    }
+  </style>
+  <script>
+    function rawString (input, offset) {
+      const inputBuffer = new TextEncoder().encode(input);
+      const outputBuffer = new Uint8Array(memory.buffer, offset, inputBuffer.length);
+      for (let i = 0; i < inputBuffer.length; i++) {
+        outputBuffer[i] = inputBuffer[i];
+      }
+    }
+  function FetchAndInstantiateWasmFromAddress (url, imports) {
+    return fetch(url)
+    .then(result => {
+      if (result.ok)
+        return result.arrayBuffer();
+      throw new Error(`Unable to fetch Web Assembly file ${url}.`);
+    })
+    .then(wasmByteArray => WebAssembly.compile(wasmByteArray))
+    .then(wasmModule => WebAssembly.instantiate(wasmModule, imports || {}))
+    .then(wasmInstance => wasmInstance.exports);
+  }
+  FetchAndInstantiateWasmFromAddress('./main.wasm')
+    .then(wasmInstance => {
+      let upper = "LOADED FROM WEBASSEMBLY MEMORY"
+      const memory = wasmInstance.memory;
+      const stringBuffer = new Uint8Array(memory.buffer,wasmInstance.getStringStartingOffset(), 30);
+      let result = new TextDecoder().decode(stringBuffer);
+      document.getElementById("reader").innerText= result;
+      let inputBuffer = new TextEncoder().encode(upper);
+      for (let i = 0; i < inputBuffer.length; i++) {
+        inputBuffer[i] = stringBuffer[i];
+      }
+      
+      const stringLowercaseBuffer = new Uint8Array(memory.buffer,wasmInstance.toLowerCase(), 30);
+      const lowercaseResult = new TextDecoder().decode(stringLowercaseBuffer);
+      document.getElementById("writer").innerText= lowercaseResult;
+      });
+</script>
+</head>
+<body>
+  <h1>Lesson 4</h1>
+  <p>The following was read from Webassembly Memory</p><br>
+  <span id="reader"></span>
+  <p>The following was Written to Webassembly Memory</p><br>
+  <span id="writer"></span>
+
+</body>
+</html>
+
+
+<!-- 
+
+
+rawString(upper, wasmInstance.exports.getStringStartingOffset());
+const stringLowercaseBuffer = new Uint8Array(memory.buffer,wasmInstance.exports.toLowerCase(), 30);
+const lowercaseResult = new TextDecoder().decode(stringLowercaseBuffer);
+document.getElementById("writer").innerText= lowercaseResult; -->

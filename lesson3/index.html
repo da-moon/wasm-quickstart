@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      background-color: rgb(255, 255, 255);
+    }
+  </style>
+  <script>
+  function FetchAndInstantiateWasmFromAddress (url, imports) {
+    return fetch(url)
+    .then(result => {
+      if (result.ok)
+        return result.arrayBuffer();
+      throw new Error(`Unable to fetch Web Assembly file ${url}.`);
+    })
+    .then(wasmByteArray => WebAssembly.compile(wasmByteArray))
+    .then(wasmModule => WebAssembly.instantiate(wasmModule, imports || {}))
+    .then(wasmInstance => wasmInstance.exports);
+  }
+  FetchAndInstantiateWasmFromAddress('./main.wasm', {
+      env: {
+        JSFactorial: input => {
+          let result = 1
+          if (input>0){
+            for (let i=1 ; i<=input;i++){
+              result = result*i
+            }
+            return result
+          }else{
+            return -1
+          }
+        },
+        ConsoleLog : input => console.log(input),
+          }
+    })
+    .then(wasmInstance => {
+      factorialWASM = wasmInstance.factorialWASM;
+      WriteOnJSCOnsole = wasmInstance.WriteOnJSCOnsole;
+      WriteOnJSCOnsole(6)
+      document.getElementById("container").innerText= factorialWASM(6);
+    });
+</script>
+</head>
+<body>
+  <h1>Lesson 3</h1>
+  <p>Passing a factorial function defined in Javascript and running Factorial(6) :</p><br>
+  <span id="container"></span>
+
+</body>
+</html>
